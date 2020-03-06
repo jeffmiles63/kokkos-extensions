@@ -1,0 +1,4 @@
+
+
+LIST(APPEND KOKKOS_MEMSPACE_LIST UmpireSpace)
+
