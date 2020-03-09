@@ -233,7 +233,21 @@ namespace Kokkos {
 namespace Impl {
 
 template <class ExecutionSpace>
-struct DeepCopy<Experimental::SICMSpace, Experimental::SICMSpace,
+struct DeepCopy<Kokkos::Experimental::SICMSpace,
+                Kokkos::Experimental::SICMSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    hostspace_parallel_deepcopy(dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    hostspace_parallel_deepcopy(dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::HostSpace, Kokkos::Experimental::SICMSpace,
                 ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
     hostspace_parallel_deepcopy(dst, src, n);
@@ -247,20 +261,8 @@ struct DeepCopy<Experimental::SICMSpace, Experimental::SICMSpace,
 };
 
 template <class ExecutionSpace>
-struct DeepCopy<HostSpace, Experimental::SICMSpace, ExecutionSpace> {
-  DeepCopy(void* dst, const void* src, size_t n) {
-    hostspace_parallel_deepcopy(dst, src, n);
-  }
-
-  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
-    exec.fence();
-    hostspace_parallel_deepcopy(dst, src, n);
-    exec.fence();
-  }
-};
-
-template <class ExecutionSpace>
-struct DeepCopy<Experimental::SICMSpace, HostSpace, ExecutionSpace> {
+struct DeepCopy<Kokkos::Experimental::SICMSpace, Kokkos::HostSpace,
+                ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
     hostspace_parallel_deepcopy(dst, src, n);
   }
