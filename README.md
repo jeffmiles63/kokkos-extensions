@@ -9,11 +9,11 @@ For example: to enable the UmpireSpace plugin, use the following.
 
 `-DKokkos_PLUGIN_PATH="<local path to kokkos-extension>/UmpireSpace"`
 
-To Enable multiple plugins, separate paths with a semi-colon.
+To enable multiple plugins, separate paths with a semi-colon.
 
 `-DKokkos_PLUGIN_PATH="<local path to kokkos-extensions>/UmpireSpace;<local path to kokkos-extensions>/SICMSpace"`
 
-this option can also be used in conjunction with the kokkos generate_makefile.bash using the --cmake-flags option.  
+This option can also be used in conjunction with the kokkos generate_makefile.bash using the --cmake-flags option.  
 
 `--cmake-flags="-DKokkos_PLUGIN_PATH=<local path to kokkos-extension>/UmpireSpace"`
 
