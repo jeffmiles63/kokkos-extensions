@@ -82,7 +82,7 @@ inline const char* umpire_space_name(const MemorySpace& default_device) {
   if (std::is_same<MemorySpace, Kokkos::CudaSpace>::value) return "DEVICE";
   if (std::is_same<MemorySpace, Kokkos::CudaUVMSpace>::value) return "UM";
   if (std::is_same<MemorySpace, Kokkos::CudaHostPinnedSpace>::value)
-    return "HOSTPINNED";
+    return "PINNED";
 #endif
 }
 }  // namespace Impl
