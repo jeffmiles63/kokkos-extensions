@@ -31,7 +31,7 @@ The following files are required for a Kokkos plugin, but the contents may vary.
  - ` <plugin root>/core/src/decl/Kokkos_Declare_<space name>.hpp ` - header file containing full declaration of plugin space/s.  This is included in Kokkos_Core.hpp.  Usually this is a redirect where it includes the actual space header file/s.
 
 
-If the Plugin contains a Memory Space only, the name of the space must be appended to Kokkos option `KOKKOS_MEMSPACE_LIST`.   The name should match the <space name> referenced above.  
+If the Plugin contains a Memory Space only, the name of the space must be appended to Kokkos option `KOKKOS_MEMSPACE_LIST`.   The name should match the `<space name>` referenced above.  
   
   `LIST(APPEND KOKKOS_MEMSPACE_LIST <space name>)`
 
