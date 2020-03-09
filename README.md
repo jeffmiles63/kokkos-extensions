@@ -28,7 +28,7 @@ The following files are required for a Kokkos plugin, but the contents may vary.
  - ` <plugin root>/core/src/CMakeLists.txt ` - CMake file used to include source files into the kokkoscore library.  This is also where the installation command for headers would be included.  Adding source files to the kokkoscore library is done by appending the source globs to the KOKKOS_CORE_SRCS list
  - ` <plugin root>/core/unit_test/CMakeLists.txt ` - CMake file used to include source files into kokkos unit tests.  This is usually accomplished by adding the test cpp files to the `<BackendName>_SOURCES` list.  If the plugin contains a new execution space, then the incremental tests should be utilized.
  - ` <plugin root>/core/src/fwd/Kokkos_Fwd_<space name>.hpp ` - header file containing forward declare of plugin space/s.  This is included in Kokkos_Core_fwd.hpp
- - ` <plugin root>/core/src/decl/Kokkos_Declare_<space name>.hpp ` - header file containing full declaration of plugin space/s.  This is included in Kokkos_Core.hpp.  Usually this is a redirect where it include the actual space header file.
+ - ` <plugin root>/core/src/decl/Kokkos_Declare_<space name>.hpp ` - header file containing full declaration of plugin space/s.  This is included in Kokkos_Core.hpp.  Usually this is a redirect where it includes the actual space header file/s.
 
 
 If the Plugin contains a Memory Space only, the name of the space must be appended to Kokkos option `KOKKOS_MEMSPACE_LIST`.   The name should match the <space name> referenced above.  
