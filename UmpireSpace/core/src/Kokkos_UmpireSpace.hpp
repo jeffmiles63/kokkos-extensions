@@ -59,6 +59,10 @@
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 
+#if defined(KOKKOS_ENABLE_PROFILING)
+   #include <impl/Kokkos_Profiling_Interface.hpp>
+#endif
+
 #include "umpire/ResourceManager.hpp"
 #include "umpire/Allocator.hpp"
 /*--------------------------------------------------------------------------*/
@@ -68,8 +72,8 @@ namespace Kokkos {
 namespace Impl {
 
 void umpire_to_umpire_deep_copy(void*, const void*, size_t, bool offset = true);
-void host_to_umpire_deep_copy(void*, const void*, size_t, bool offset = true);
-void umpire_to_host_deep_copy(void*, const void*, size_t, bool offset = true);
+void kokkos_to_umpire_deep_copy(const char *, void*, const void*, size_t, bool offset = true);
+void umpire_to_kokkos_deep_copy(const char *, void*, const void*, size_t, bool offset = true);
 void* umpire_allocate(const char*, size_t);
 void umpire_deallocate(const char* name, void* const arg_alloc_ptr,
                        const size_t);
@@ -178,16 +182,44 @@ struct MemorySpaceAccess<Kokkos::UmpireHostSpace, Kokkos::HostSpace> {
 };
 
 template <>
+struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::UmpireHostSpace> {
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy = true };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::UmpireHostSpace, Kokkos::CudaHostPinnedSpace> {
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy = true };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::CudaUVMSpace, Kokkos::UmpireHostSpace> {
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy = true };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::UmpireHostSpace, Kokkos::CudaUVMSpace> {
+  enum { assignable = true };
+  enum { accessible = true };
+  enum { deepcopy = true };
+};
+
+template <>
 struct MemorySpaceAccess<Kokkos::CudaSpace, Kokkos::UmpireHostSpace> {
   enum { assignable = false };
-  enum { accessible = true };
+  enum { accessible = false };
   enum { deepcopy = true };
 };
 
 template <>
 struct MemorySpaceAccess<Kokkos::UmpireHostSpace, Kokkos::CudaSpace> {
   enum { assignable = false };
-  enum { accessible = true };
+  enum { accessible = false };
   enum { deepcopy = true };
 };
 
@@ -328,7 +360,7 @@ class SharedAllocationRecord<
           (char)0;
 
       // Copy to device memory
-      Kokkos::Impl::host_to_umpire_deep_copy(RecordBase::m_alloc_ptr, &header,
+      Kokkos::Impl::kokkos_to_umpire_deep_copy("HOST", RecordBase::m_alloc_ptr, &header,
                                              sizeof(SharedAllocationHeader),
                                              false);
     }
@@ -344,7 +376,7 @@ class SharedAllocationRecord<
       // we don't know where the umpire pointer lives, so it is best to create a
       // local header, then deep copy from umpire to host and use the local.
       SharedAllocationHeader header;
-      Kokkos::Impl::umpire_to_host_deep_copy(
+      Kokkos::Impl::umpire_to_kokkos_deep_copy("HOST",
           &header, RecordBase::head(), sizeof(SharedAllocationHeader), false);
 
       return std::string(header.m_label);
@@ -418,7 +450,7 @@ class SharedAllocationRecord<
         arg_alloc_ptr ? Header::get_header(arg_alloc_ptr) : (Header*)0;
 
     if (arg_alloc_ptr) {
-      Kokkos::Impl::umpire_to_host_deep_copy(
+      Kokkos::Impl::umpire_to_kokkos_deep_copy("HOST",
           &head, head_dev, sizeof(SharedAllocationHeader), false);
     }
 
@@ -465,12 +497,12 @@ namespace Impl {
 template <class ExecutionSpace>
 struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
-    host_to_umpire_deep_copy(dst, src, n);
+    kokkos_to_umpire_deep_copy("HOST", dst, src, n);
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
-    host_to_umpire_deep_copy(dst, src, n);
+    kokkos_to_umpire_deep_copy("HOST", dst, src, n);
     exec.fence();
   }
 };
@@ -478,15 +510,95 @@ struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::HostSpace, ExecutionSpace> {
 template <class ExecutionSpace>
 struct DeepCopy<Kokkos::HostSpace, Kokkos::UmpireHostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
-    umpire_to_host_deep_copy(dst, src, n);
+    umpire_to_kokkos_deep_copy("HOST", dst, src, n);
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
-    umpire_to_host_deep_copy(dst, src, n);
+    umpire_to_kokkos_deep_copy("HOST", dst, src, n);
     exec.fence();
   }
 };
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::CudaSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    kokkos_to_umpire_deep_copy("DEVICE", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    kokkos_to_umpire_deep_copy("DEVICE", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::CudaSpace, Kokkos::UmpireHostSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    umpire_to_kokkos_deep_copy("DEVICE", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    umpire_to_kokkos_deep_copy("DEVICE", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::CudaHostPinnedSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    kokkos_to_umpire_deep_copy("PINNED", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    kokkos_to_umpire_deep_copy("PINNED", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::CudaHostPinnedSpace, Kokkos::UmpireHostSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    umpire_to_kokkos_deep_copy("PINNED", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    umpire_to_kokkos_deep_copy("PINNED", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::CudaUVMSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    kokkos_to_umpire_deep_copy("UM", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    kokkos_to_umpire_deep_copy("UM", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::CudaUVMSpace, Kokkos::UmpireHostSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    umpire_to_kokkos_deep_copy("UM", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    umpire_to_kokkos_deep_copy("UM", dst, src, n);
+    exec.fence();
+  }
+};
+#endif // KOKKOS_ENABLE_CUDA
 
 template <class ExecutionSpace>
 struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::UmpireHostSpace,
@@ -505,12 +617,12 @@ struct DeepCopy<Kokkos::UmpireHostSpace, Kokkos::UmpireHostSpace,
 template <class ExecutionSpace>
 struct DeepCopy<Kokkos::UmpireCudaSpace, Kokkos::HostSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
-    host_to_umpire_deep_copy(dst, src, n);
+    kokkos_to_umpire_deep_copy("HOST", dst, src, n);
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
-    host_to_umpire_deep_copy(dst, src, n);
+    kokkos_to_umpire_deep_copy("HOST", dst, src, n);
     exec.fence();
   }
 };
@@ -518,12 +630,12 @@ struct DeepCopy<Kokkos::UmpireCudaSpace, Kokkos::HostSpace, ExecutionSpace> {
 template <class ExecutionSpace>
 struct DeepCopy<Kokkos::HostSpace, Kokkos::UmpireCudaSpace, ExecutionSpace> {
   DeepCopy(void* dst, const void* src, size_t n) {
-    umpire_to_host_deep_copy(dst, src, n);
+    umpire_to_kokkos_deep_copy("HOST", dst, src, n);
   }
 
   DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
-    umpire_to_host_deep_copy(dst, src, n);
+    umpire_to_kokkos_deep_copy("HOST", dst, src, n);
     exec.fence();
   }
 };
@@ -541,6 +653,87 @@ struct DeepCopy<Kokkos::UmpireCudaSpace, Kokkos::UmpireCudaSpace,
     exec.fence();
   }
 };
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::UmpireCudaSpace, Kokkos::CudaSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    kokkos_to_umpire_deep_copy("DEVICE", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    kokkos_to_umpire_deep_copy("DEVICE", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::CudaSpace, Kokkos::UmpireCudaSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    umpire_to_kokkos_deep_copy("DEVICE", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    umpire_to_kokkos_deep_copy("DEVICE", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::UmpireCudaSpace, Kokkos::CudaHostPinnedSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    kokkos_to_umpire_deep_copy("PINNED", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    kokkos_to_umpire_deep_copy("PINNED", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::CudaHostPinnedSpace, Kokkos::UmpireCudaSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    umpire_to_kokkos_deep_copy("PINNED", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    umpire_to_kokkos_deep_copy("PINNED", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::UmpireCudaSpace, Kokkos::CudaUVMSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    kokkos_to_umpire_deep_copy("UM", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    kokkos_to_umpire_deep_copy("UM", dst, src, n);
+    exec.fence();
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::CudaUVMSpace, Kokkos::UmpireCudaSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) {
+    umpire_to_kokkos_deep_copy("UM", dst, src, n);
+  }
+
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
+    exec.fence();
+    umpire_to_kokkos_deep_copy("UM", dst, src, n);
+    exec.fence();
+  }
+};
+#endif // KOKKOS_ENABLE_CUDA
+
 }  // namespace Impl
 
 }  // namespace Kokkos

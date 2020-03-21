@@ -43,7 +43,7 @@
 
 #include <cstdio>
 #include <algorithm>
-#include <Kokkos_Macros.hpp>
+#include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 #if defined(KOKKOS_ENABLE_PROFILING)
@@ -146,15 +146,15 @@ void umpire_to_umpire_deep_copy(void *dst, const void *src, size_t size,
                 size);
 }
 
-/* host_to_umpire_deep_copy - copy from kokkos host allocated ptr to umpire
+/* kokkos_to_umpire_deep_copy - copy from kokkos memspace allocated ptr to umpire
  * allocated ptr. same rules apply as above, but only for the dst pointer.
  *
  */
-void host_to_umpire_deep_copy(void *dst, const void *src, size_t size,
-                              bool offset) {
+void kokkos_to_umpire_deep_copy(const char * umpire_space_name, void *dst, 
+                                const void *src, size_t size, bool offset) {
   auto &rm           = umpire::ResourceManager::getInstance();
   auto &op_registry  = umpire::op::MemoryOperationRegistry::getInstance();
-  auto hostAllocator = rm.getAllocator("HOST");
+  auto hostAllocator = rm.getAllocator(umpire_space_name);
 
   Kokkos::Impl::SharedAllocationHeader *dst_header =
       (Kokkos::Impl::SharedAllocationHeader *)dst;
@@ -188,15 +188,15 @@ void host_to_umpire_deep_copy(void *dst, const void *src, size_t size,
                 size);
 }
 
-/* umpire_to_host_deep_copy - copy from umpire allocated ptr to kokkos host
+/* umpire_to_kokkos_deep_copy - copy from umpire allocated ptr to kokkos mem space
  * allocated ptr. same rules apply as above, but only for the src pointer.
  *
  */
-void umpire_to_host_deep_copy(void *dst, const void *src, size_t size,
-                              bool offset) {
+void umpire_to_kokkos_deep_copy(const char * umpire_space_name, void *dst, 
+                                const void *src, size_t size, bool offset) {
   auto &rm           = umpire::ResourceManager::getInstance();
   auto &op_registry  = umpire::op::MemoryOperationRegistry::getInstance();
-  auto hostAllocator = rm.getAllocator("HOST");
+  auto hostAllocator = rm.getAllocator(umpire_space_name);
 
   Kokkos::Impl::SharedAllocationHeader *src_header =
       (Kokkos::Impl::SharedAllocationHeader *)src;
@@ -256,12 +256,12 @@ void *umpire_allocate(const char *name, const size_t arg_alloc_size) {
   }
 
   if (ptr == nullptr) {
-    Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
-        Experimental::RawMemoryAllocationFailure::FailureMode::OutOfMemoryError;
+    Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
+        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::OutOfMemoryError;
 
     throw Kokkos::Experimental::RawMemoryAllocationFailure(
         arg_alloc_size, alignment, failure_mode,
-        Experimental::RawMemoryAllocationFailure::AllocationMechanism::
+        Kokkos::Experimental::RawMemoryAllocationFailure::AllocationMechanism::
             StdMalloc);
   }
 
