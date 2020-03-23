@@ -1,0 +1,6 @@
+IF( NOT KOKKOS_ENABLE_CUDA )
+   MESSAGE(ERROR "Cuda must be enabled for NVSHMEM Space to work")
+ENDIF()
+
+LIST(APPEND KOKKOS_MEMSPACE_LIST NVSHMEMSpace)
+
