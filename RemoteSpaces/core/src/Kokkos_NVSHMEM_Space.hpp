@@ -277,7 +277,6 @@ struct DeepCopy< NVSHMEMSpace, NVSHMEMSpace, ExecutionSpace > {
 
 } // namespace Kokkos
 
-#include <impl/Kokkos_NVSHMEM_ViewMapping.hpp>
 
 #endif // #define KOKKOS_NVSHMEMSPACE_HPP
 

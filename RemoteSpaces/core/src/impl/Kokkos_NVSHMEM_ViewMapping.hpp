@@ -1,6 +1,5 @@
 #include<shmem.h>
 #include<type_traits>
-#include<impl/Kokkos_ViewMapping.hpp>
 //----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */
 
