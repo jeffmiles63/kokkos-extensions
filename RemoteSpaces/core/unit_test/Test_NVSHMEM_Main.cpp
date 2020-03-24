@@ -47,24 +47,35 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_RemoteSpaces.hpp>
 #include <mpi.h>
+#include <nvshmemx_api.h>
 
-int main( int argc, char *argv[] ) {
-  MPI_Init(&argc,&argv);
-  #ifdef KOKKOS_ENABLE_SHMEMSPACE
+#if defined(KOKKOS_ENABLE_NVSHMEMSPACE)
+using shmem_init_attr_t = nvshmemx_init_attr_t;
+#define shmem_init_attr_func nvshmemx_init_attr;
+#define SHMEM_INIT_WITH_MPI_COMM NVSHMEMX_INIT_WITH_MPI_COMM
+#else
+using shmem_init_attr_t = shmemx_init_attr_t;
+#define shmem_init_attr_func shmemx_init_attr;
+#define SHMEM_INIT_WITH_MPI_COMM SHMEMX_INIT_WITH_MPI_COMM
+#endif
+
+int main(int argc, char *argv[]) {
+  MPI_Init(&argc, &argv);
+#ifdef KOKKOS_ENABLE_SHMEMSPACE
   shmem_init();
-  #endif
-  #ifdef KOKKOS_ENABLE_NVSHMEMSPACE
+#endif
+#ifdef KOKKOS_ENABLE_NVSHMEMSPACE
   MPI_Comm mpi_comm;
-  shmemx_init_attr_t attr;
-  mpi_comm = MPI_COMM_WORLD;
+  shmem_init_attr_t attr;
+  mpi_comm      = MPI_COMM_WORLD;
   attr.mpi_comm = &mpi_comm;
-  shmemx_init_attr (SHMEMX_INIT_WITH_MPI_COMM, &attr);
-  #endif
+  shmem_init_attr_func(SHMEM_INIT_WITH_MPI_COMM, &attr);
+#endif
 
-  Kokkos::initialize(argc,argv);
-  ::testing::InitGoogleTest( &argc, argv );
+  Kokkos::initialize(argc, argv);
+  ::testing::InitGoogleTest(&argc, argv);
 
-  int result =  RUN_ALL_TESTS();
+  int result = RUN_ALL_TESTS();
   Kokkos::finalize();
   MPI_Finalize();
   return result;

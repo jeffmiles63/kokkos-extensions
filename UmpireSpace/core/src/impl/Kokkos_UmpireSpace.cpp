@@ -146,11 +146,12 @@ void umpire_to_umpire_deep_copy(void *dst, const void *src, size_t size,
                 size);
 }
 
-/* kokkos_to_umpire_deep_copy - copy from kokkos memspace allocated ptr to umpire
- * allocated ptr. same rules apply as above, but only for the dst pointer.
+/* kokkos_to_umpire_deep_copy - copy from kokkos memspace allocated ptr to
+ * umpire allocated ptr. same rules apply as above, but only for the dst
+ * pointer.
  *
  */
-void kokkos_to_umpire_deep_copy(const char * umpire_space_name, void *dst, 
+void kokkos_to_umpire_deep_copy(const char *umpire_space_name, void *dst,
                                 const void *src, size_t size, bool offset) {
   auto &rm           = umpire::ResourceManager::getInstance();
   auto &op_registry  = umpire::op::MemoryOperationRegistry::getInstance();
@@ -188,11 +189,11 @@ void kokkos_to_umpire_deep_copy(const char * umpire_space_name, void *dst,
                 size);
 }
 
-/* umpire_to_kokkos_deep_copy - copy from umpire allocated ptr to kokkos mem space
- * allocated ptr. same rules apply as above, but only for the src pointer.
+/* umpire_to_kokkos_deep_copy - copy from umpire allocated ptr to kokkos mem
+ * space allocated ptr. same rules apply as above, but only for the src pointer.
  *
  */
-void umpire_to_kokkos_deep_copy(const char * umpire_space_name, void *dst, 
+void umpire_to_kokkos_deep_copy(const char *umpire_space_name, void *dst,
                                 const void *src, size_t size, bool offset) {
   auto &rm           = umpire::ResourceManager::getInstance();
   auto &op_registry  = umpire::op::MemoryOperationRegistry::getInstance();
@@ -257,7 +258,8 @@ void *umpire_allocate(const char *name, const size_t arg_alloc_size) {
 
   if (ptr == nullptr) {
     Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode failure_mode =
-        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::OutOfMemoryError;
+        Kokkos::Experimental::RawMemoryAllocationFailure::FailureMode::
+            OutOfMemoryError;
 
     throw Kokkos::Experimental::RawMemoryAllocationFailure(
         arg_alloc_size, alignment, failure_mode,

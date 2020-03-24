@@ -49,11 +49,9 @@
 #include <iosfwd>
 #include <typeinfo>
 
-
 #include <mpi.h>
 #include <shmem.h>
 #include <shmemx.h>
-
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
@@ -70,48 +68,46 @@
 namespace Kokkos {
 
 class NVSHMEMSpace {
-public:
-  
-  typedef NVSHMEMSpace  memory_space;
-  typedef size_t     size_type;
+ public:
+  typedef NVSHMEMSpace memory_space;
+  typedef size_t size_type;
 
-#if defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
-  typedef Kokkos::OpenMP    execution_space;
-#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
-  typedef Kokkos::Threads   execution_space;
-#elif defined( KOKKOS_ENABLE_OPENMP )
-  typedef Kokkos::OpenMP    execution_space;
-#elif defined( KOKKOS_ENABLE_THREADS )
-  typedef Kokkos::Threads   execution_space;
+#if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
+  typedef Kokkos::OpenMP execution_space;
+#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
+  typedef Kokkos::Threads execution_space;
+#elif defined(KOKKOS_ENABLE_OPENMP)
+  typedef Kokkos::OpenMP execution_space;
+#elif defined(KOKKOS_ENABLE_THREADS)
+  typedef Kokkos::Threads execution_space;
 //#elif defined( KOKKOS_ENABLE_QTHREADS )
 //  typedef Kokkos::Qthreads  execution_space;
-#elif defined( KOKKOS_ENABLE_SERIAL )
-  typedef Kokkos::Serial    execution_space;
+#elif defined(KOKKOS_ENABLE_SERIAL)
+  typedef Kokkos::Serial execution_space;
 #else
-#  error "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
+#error \
+    "At least one of the following host execution spaces must be defined: Kokkos::OpenMP, Kokkos::Threads, Kokkos::Qthreads, or Kokkos::Serial.  You might be seeing this message if you disabled the Kokkos::Serial device explicitly using the Kokkos_ENABLE_Serial:BOOL=OFF CMake option, but did not enable any of the other host execution space devices."
 #endif
 
-  typedef Kokkos::Device< execution_space, memory_space > device_type;
+  typedef Kokkos::Device<execution_space, memory_space> device_type;
 
   NVSHMEMSpace();
-  NVSHMEMSpace( NVSHMEMSpace && rhs ) = default;
-  NVSHMEMSpace( const NVSHMEMSpace & rhs ) = default;
-  NVSHMEMSpace & operator = ( NVSHMEMSpace && ) = default;
-  NVSHMEMSpace & operator = ( const NVSHMEMSpace & ) = default;
-  ~NVSHMEMSpace() = default;
+  NVSHMEMSpace(NVSHMEMSpace&& rhs)      = default;
+  NVSHMEMSpace(const NVSHMEMSpace& rhs) = default;
+  NVSHMEMSpace& operator=(NVSHMEMSpace&&) = default;
+  NVSHMEMSpace& operator=(const NVSHMEMSpace&) = default;
+  ~NVSHMEMSpace()                              = default;
 
-  explicit
-  NVSHMEMSpace( const MPI_Comm & );
+  explicit NVSHMEMSpace(const MPI_Comm&);
 
-  void * allocate( const size_t arg_alloc_size ) const;
+  void* allocate(const size_t arg_alloc_size) const;
 
-  void deallocate( void * const arg_alloc_ptr
-                 , const size_t arg_alloc_size ) const;
+  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
 
-  void * allocate( const int* gids, const int& arg_local_alloc_size ) const;
+  void* allocate(const int* gids, const int& arg_local_alloc_size) const;
 
-  void deallocate( const int* gids, void * const arg_alloc_ptr
-                 , const size_t arg_alloc_size ) const;
+  void deallocate(const int* gids, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
 
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
@@ -119,20 +115,19 @@ public:
   void fence();
 
   int* rank_list;
-  int allocation_mode; 
-  int64_t extent; 
+  int allocation_mode;
+  int64_t extent;
 
   void impl_set_rank_list(int* const);
   void impl_set_allocation_mode(const int);
   void impl_set_extent(int64_t N);
 
-private:
-
+ private:
   static constexpr const char* m_name = "NVSHMEM";
-  friend class Kokkos::Impl::SharedAllocationRecord< Kokkos::NVSHMEMSpace, void >;
+  friend class Kokkos::Impl::SharedAllocationRecord<Kokkos::NVSHMEMSpace, void>;
 };
 
-} // namespace Kokkos
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 
@@ -140,12 +135,13 @@ namespace Kokkos {
 
 namespace Impl {
 
-static_assert( Kokkos::Impl::MemorySpaceAccess< Kokkos::NVSHMEMSpace, Kokkos::NVSHMEMSpace >::assignable, "" );
+static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::NVSHMEMSpace,
+                                              Kokkos::NVSHMEMSpace>::assignable,
+              "");
 
+}  // namespace Impl
 
-} // namespace Impl
-
-} // namespace Kokkos
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 
@@ -153,82 +149,73 @@ namespace Kokkos {
 
 namespace Impl {
 
-template<>
-class SharedAllocationRecord< Kokkos::NVSHMEMSpace, void >
-  : public SharedAllocationRecord< void, void >
-{
-private:
+template <>
+class SharedAllocationRecord<Kokkos::NVSHMEMSpace, void>
+    : public SharedAllocationRecord<void, void> {
+ private:
   friend Kokkos::NVSHMEMSpace;
 
-  typedef SharedAllocationRecord< void, void >  RecordBase;
+  typedef SharedAllocationRecord<void, void> RecordBase;
 
-  SharedAllocationRecord( const SharedAllocationRecord & ) = delete;
-  SharedAllocationRecord & operator = ( const SharedAllocationRecord & ) = delete;
+  SharedAllocationRecord(const SharedAllocationRecord&) = delete;
+  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
-  static void deallocate( RecordBase * );
+  static void deallocate(RecordBase*);
 
-  /**\brief  Root record for tracked allocations from this NVSHMEMSpace instance */
+  /**\brief  Root record for tracked allocations from this NVSHMEMSpace instance
+   */
   static RecordBase s_root_record;
 
   const Kokkos::NVSHMEMSpace m_space;
 
-protected:
+ protected:
   ~SharedAllocationRecord();
   SharedAllocationRecord() = default;
 
-  SharedAllocationRecord( const Kokkos::NVSHMEMSpace        & arg_space
-                        , const std::string              & arg_label
-                        , const size_t                     arg_alloc_size
-                        , const RecordBase::function_type  arg_dealloc = & deallocate
-                        );
+  SharedAllocationRecord(
+      const Kokkos::NVSHMEMSpace& arg_space, const std::string& arg_label,
+      const size_t arg_alloc_size,
+      const RecordBase::function_type arg_dealloc = &deallocate);
 
-public:
-
-  inline
-  std::string get_label() const
-  {
-    SharedAllocationHeader header ;
-    Kokkos::Impl::DeepCopy< Kokkos::HostSpace , Kokkos::CudaSpace >( & header , RecordBase::head() , sizeof(SharedAllocationHeader) );
-    return std::string( header.m_label );
+ public:
+  inline std::string get_label() const {
+    SharedAllocationHeader header;
+    Kokkos::Impl::DeepCopy<Kokkos::HostSpace, Kokkos::CudaSpace>(
+        &header, RecordBase::head(), sizeof(SharedAllocationHeader));
+    return std::string(header.m_label);
   }
 
-  KOKKOS_INLINE_FUNCTION static
-  SharedAllocationRecord * allocate( const Kokkos::NVSHMEMSpace &  arg_space
-                                   , const std::string       &  arg_label
-                                   , const size_t               arg_alloc_size
-                                   )
-  {
-#if defined( KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST )
-    return new SharedAllocationRecord( arg_space, arg_label, arg_alloc_size );
+  KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
+      const Kokkos::NVSHMEMSpace& arg_space, const std::string& arg_label,
+      const size_t arg_alloc_size) {
+#if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
+    return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
 #else
-    return (SharedAllocationRecord *) 0;
+    return (SharedAllocationRecord*)0;
 #endif
   }
 
-
   /**\brief  Allocate tracked memory in the space */
-  static
-  void * allocate_tracked( const Kokkos::NVSHMEMSpace & arg_space
-                         , const std::string & arg_label
-                         , const size_t arg_alloc_size );
+  static void* allocate_tracked(const Kokkos::NVSHMEMSpace& arg_space,
+                                const std::string& arg_label,
+                                const size_t arg_alloc_size);
 
   /**\brief  Reallocate tracked memory in the space */
-  static
-  void * reallocate_tracked( void * const arg_alloc_ptr
-                           , const size_t arg_alloc_size );
+  static void* reallocate_tracked(void* const arg_alloc_ptr,
+                                  const size_t arg_alloc_size);
 
   /**\brief  Deallocate tracked memory in the space */
-  static
-  void deallocate_tracked( void * const arg_alloc_ptr );
+  static void deallocate_tracked(void* const arg_alloc_ptr);
 
-  static SharedAllocationRecord * get_record( void * arg_alloc_ptr );
+  static SharedAllocationRecord* get_record(void* arg_alloc_ptr);
 
-  static void print_records( std::ostream &, const Kokkos::NVSHMEMSpace &, bool detail = false );
+  static void print_records(std::ostream&, const Kokkos::NVSHMEMSpace&,
+                            bool detail = false);
 };
 
-} // namespace Impl
+}  // namespace Impl
 
-} // namespace Kokkos
+}  // namespace Kokkos
 
 //----------------------------------------------------------------------------
 
@@ -236,47 +223,40 @@ namespace Kokkos {
 
 namespace Impl {
 
-template<>
-struct MemorySpaceAccess< Kokkos::HostSpace , Kokkos::NVSHMEMSpace > {
+template <>
+struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::NVSHMEMSpace> {
   enum { assignable = false };
   enum { accessible = false };
-  enum { deepcopy   = true };
+  enum { deepcopy = true };
 };
 
-template<>
-struct MemorySpaceAccess< Kokkos::CudaSpace , Kokkos::NVSHMEMSpace > {
+template <>
+struct MemorySpaceAccess<Kokkos::CudaSpace, Kokkos::NVSHMEMSpace> {
   enum { assignable = false };
   enum { accessible = true };
-  enum { deepcopy   = true };
+  enum { deepcopy = true };
 };
 
-template<>
-struct VerifyExecutionCanAccessMemorySpace
-  < Kokkos::HostSpace
-  , Kokkos::NVSHMEMSpace
-  >
-{
+template <>
+struct VerifyExecutionCanAccessMemorySpace<Kokkos::HostSpace,
+                                           Kokkos::NVSHMEMSpace> {
   enum { value = false };
-  inline static void verify( void ) { }
-  inline static void verify( const void *  ) { }
+  inline static void verify(void) {}
+  inline static void verify(const void*) {}
 };
 
-template< class ExecutionSpace >
-struct DeepCopy< NVSHMEMSpace, NVSHMEMSpace, ExecutionSpace > {
-  DeepCopy( void * dst, const void * src, size_t n ) {
-    memcpy( dst, src, n );
-  }
+template <class ExecutionSpace>
+struct DeepCopy<NVSHMEMSpace, NVSHMEMSpace, ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t n) { memcpy(dst, src, n); }
 
-  DeepCopy( const ExecutionSpace& exec, void * dst, const void * src, size_t n ) {
+  DeepCopy(const ExecutionSpace& exec, void* dst, const void* src, size_t n) {
     exec.fence();
-    memcpy( dst, src, n );
+    memcpy(dst, src, n);
   }
 };
 
-} // namespace Impl
+}  // namespace Impl
 
-} // namespace Kokkos
+}  // namespace Kokkos
 
-
-#endif // #define KOKKOS_NVSHMEMSPACE_HPP
-
+#endif  // #define KOKKOS_NVSHMEMSPACE_HPP

@@ -9,6 +9,10 @@ find_library(_nvshmem_lib
              NAMES libnvshmem.a
              HINTS ${_nvshmem_root}/lib ${_nvshmem_root}/lib64)
 
+find_library(_oshmem_lib
+             NAMES liboshmem.so
+             HINTS ${_nvshmem_root}/lib ${_nvshmem_root}/lib64)
+
 find_path(_nvshmem_include_dir
           NAMES shmemx.h
           HINTS ${_nvshmem_root}/include)
@@ -35,6 +39,11 @@ find_package_handle_standard_args(NVSHMEM ${_fail_msg}
 add_library(NVSHMEM::NVSHMEM UNKNOWN IMPORTED)
 set_target_properties(NVSHMEM::NVSHMEM PROPERTIES
                       IMPORTED_LOCATION ${_nvshmem_lib}
+                      INTERFACE_INCLUDE_DIRECTORIES ${_nvshmem_include_dir}
+                      )
+add_library(NVSHMEM::OSHMEM UNKNOWN IMPORTED)
+set_target_properties(NVSHMEM::OSHMEM PROPERTIES
+                      IMPORTED_LOCATION ${_oshmem_lib}
                       INTERFACE_INCLUDE_DIRECTORIES ${_nvshmem_include_dir}
                       )
 

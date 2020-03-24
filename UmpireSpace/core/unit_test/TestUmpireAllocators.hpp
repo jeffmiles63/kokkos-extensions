@@ -4,15 +4,17 @@ namespace Test {
 
 template <class T>
 struct TestUmpireAllocators {
-  const int N            = 100;
-  using exec_device      = Kokkos::DefaultExecutionSpace;
-  using exec_host        = Kokkos::DefaultHostExecutionSpace;
-  using default_device   = Kokkos::CudaSpace;
-  using default_host     = Kokkos::HostSpace;
-//  using default_device   = typename exec_device::memory_space;
-//  using default_host     = Kokkos::Impl::if_c<std::is_same<Kokkos::Impl::DefaultHostMemorySpace, 
-//                           Kokkos::UmpireSpace<Kokkos::HostSpace>>::value, 
-//                           Kokkos::HostSpace, typename exec_host::memory_space>;
+  const int N          = 100;
+  using exec_device    = Kokkos::DefaultExecutionSpace;
+  using exec_host      = Kokkos::DefaultHostExecutionSpace;
+  using default_device = Kokkos::CudaSpace;
+  using default_host   = Kokkos::HostSpace;
+  //  using default_device   = typename exec_device::memory_space;
+  //  using default_host     =
+  //  Kokkos::Impl::if_c<std::is_same<Kokkos::Impl::DefaultHostMemorySpace,
+  //                           Kokkos::UmpireSpace<Kokkos::HostSpace>>::value,
+  //                           Kokkos::HostSpace, typename
+  //                           exec_host::memory_space>;
   using mem_space_host   = Kokkos::UmpireSpace<default_host>;
   using mem_space_device = Kokkos::UmpireSpace<default_device>;
   using host_view_type   = Kokkos::View<T*, mem_space_host>;
