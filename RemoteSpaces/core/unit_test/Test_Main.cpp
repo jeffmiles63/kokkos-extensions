@@ -47,24 +47,24 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_RemoteSpaces.hpp>
 #include <mpi.h>
-#include <nvshmemx_api.h>
 
-#if defined(KOKKOS_ENABLE_NVSHMEMSPACE)
+#ifdef KOKKOS_ENABLE_NVSHMEM_TEST
+#include <nvshmemx_api.h>
 using shmem_init_attr_t = nvshmemx_init_attr_t;
 #define shmem_init_attr_func nvshmemx_init_attr;
 #define SHMEM_INIT_WITH_MPI_COMM NVSHMEMX_INIT_WITH_MPI_COMM
-#else
-using shmem_init_attr_t = shmemx_init_attr_t;
-#define shmem_init_attr_func shmemx_init_attr;
-#define SHMEM_INIT_WITH_MPI_COMM SHMEMX_INIT_WITH_MPI_COMM
 #endif
+
+//   using shmem_init_attr_t = shmemx_init_attr_t;
+//   #define shmem_init_attr_func shmemx_init_attr;
+//   #define SHMEM_INIT_WITH_MPI_COMM SHMEMX_INIT_WITH_MPI_COMM
 
 int main(int argc, char *argv[]) {
   MPI_Init(&argc, &argv);
-#ifdef KOKKOS_ENABLE_SHMEMSPACE
+#if defined(KOKKOS_ENABLE_SHMEM_TEST)
   shmem_init();
 #endif
-#ifdef KOKKOS_ENABLE_NVSHMEMSPACE
+#if defined(KOKKOS_ENABLE_NVSHMEM_TEST)
   MPI_Comm mpi_comm;
   shmem_init_attr_t attr;
   mpi_comm      = MPI_COMM_WORLD;

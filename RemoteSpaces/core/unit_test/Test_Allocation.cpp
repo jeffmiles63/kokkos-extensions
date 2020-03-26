@@ -50,6 +50,19 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_RemoteSpaces.hpp>
 
+#ifdef KOKKOS_ENABLE_NVSHMEM_TEST
+#define KOKKOS_TEST_REMOTE_MEMORY_SPACE Kokkos::NVSHMEMSpace
+#endif
+#ifdef KOKKOS_ENABLE_SHMEM_TEST
+#define KOKKOS_TEST_REMOTE_MEMORY_SPACE Kokkos::SHMEMSpace
+#endif
+#ifdef KOKKOS_ENABLE_MPI_TEST
+#define KOKKOS_TEST_REMOTE_MEMORY_SPACE Kokkos::MPISpace
+#endif
+#ifdef KOKKOS_ENABLE_QUO_TEST
+#define KOKKOS_TEST_REMOTE_MEMORY_SPACE Kokkos::QUOSpace
+#endif
+
 template <class ViewType>
 void check_extents(ViewType view, int r) {
   int rank = view.rank;
@@ -79,15 +92,15 @@ void test_allocate_symmetric_remote_view_by_rank(Args... args) {
 
 TEST(allocation, symmetric_view_by_rank) {
   test_allocate_symmetric_remote_view_by_rank<
-      double*, Kokkos::DefaultRemoteMemorySpace>();
+      double*, KOKKOS_TEST_REMOTE_MEMORY_SPACE>();
   test_allocate_symmetric_remote_view_by_rank<double**,
-                                              Kokkos::DefaultRemoteMemorySpace>(
+                                              KOKKOS_TEST_REMOTE_MEMORY_SPACE>(
       113);
   test_allocate_symmetric_remote_view_by_rank<double***,
-                                              Kokkos::DefaultRemoteMemorySpace>(
+                                              KOKKOS_TEST_REMOTE_MEMORY_SPACE>(
       7, 5);
   test_allocate_symmetric_remote_view_by_rank<double****,
-                                              Kokkos::DefaultRemoteMemorySpace>(
+                                              KOKKOS_TEST_REMOTE_MEMORY_SPACE>(
       9, 10, 7);
 }
 

@@ -24,6 +24,14 @@ ViewType allocate_symmetric_remote_view(const char* const label, int num_ranks,
 
 }  // namespace Kokkos
 
+#if defined(KOKKOS_ENABLE_NVSHMEMSPACE)
 #include <impl/Kokkos_NVSHMEM_ViewMapping.hpp>
+#endif
+#if defined(KOKKOS_ENABLE_MPISPACE)
+#include <impl/Kokkos_MPISpace_ViewMapping.hpp>
+#endif
+#if defined(KOKKOS_ENABLE_SHMEMSPACE)
+#include <impl/Kokkos_SHMEM_ViewMapping.hpp>
+#endif
 
 #endif  // __KOKKOS_POST_INCLUDE_REMOTESPACES

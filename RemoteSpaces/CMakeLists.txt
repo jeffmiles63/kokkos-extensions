@@ -1,7 +1,7 @@
 
 KOKKOS_ENABLE_OPTION(QUOSPACE      OFF "Whether to enable QUO Remote Space")
 KOKKOS_ENABLE_OPTION(SHMEMSPACE    OFF "Whether to enable SHMEM Remote Space")
-KOKKOS_ENABLE_OPTION(NVSHMEMSPACE      OFF "Whether to enable NVSHMEM Remote Space")
+KOKKOS_ENABLE_OPTION(NVSHMEMSPACE  OFF "Whether to enable NVSHMEM Remote Space")
 KOKKOS_ENABLE_OPTION(MPISPACE      OFF "Whether to enable MPI Remote Space")
 
 IF( KOKKOS_ENABLE_NVSHMEMSPACE)
