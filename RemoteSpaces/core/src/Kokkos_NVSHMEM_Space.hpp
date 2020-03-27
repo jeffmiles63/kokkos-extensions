@@ -50,8 +50,8 @@
 #include <typeinfo>
 
 #include <mpi.h>
-#include <shmem.h>
-#include <shmemx.h>
+#include <nvshmem.h>
+#include <nvshmemx.h>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
