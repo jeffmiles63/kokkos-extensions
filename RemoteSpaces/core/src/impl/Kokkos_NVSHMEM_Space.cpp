@@ -43,7 +43,9 @@
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_NVSHMEM_Space.hpp>
+#include <mpi.h>
 #include <nvshmem.h>
+#include <nvshmemx.h>
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 

@@ -50,19 +50,11 @@
 #include <typeinfo>
 
 #include <mpi.h>
-#include <nvshmem.h>
-#include <nvshmemx.h>
 
 #include <Kokkos_Core_fwd.hpp>
-#include <Kokkos_Concepts.hpp>
-#include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_CudaSpace.hpp>
 
-#include <impl/Kokkos_Traits.hpp>
-#include <impl/Kokkos_Error.hpp>
-#include <impl/Kokkos_SharedAlloc.hpp>
-#include <impl/Kokkos_MemorySpace.hpp>
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {

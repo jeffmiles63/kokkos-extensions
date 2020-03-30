@@ -58,7 +58,7 @@ double shmem_type_g(double* ptr, const int pe) {
   return 0;
 #endif
 }
-#endif
+#endif //  KOKKOS_ENABLE_SHMEM
 
 struct NVSHMEMSpaceSpecializeTag {};
 
@@ -740,7 +740,7 @@ class ViewMapping<Traits, NVSHMEMSpaceSpecializeTag> {
       layout.dimension[i] = arg_layout.dimension[i];
     layout.dimension[0] = 1;
     m_offset            = offset_type(padding(), layout);
-    m_num_pes           = shmem_n_pes();
+    m_num_pes           = nvshmem_n_pes();
 
     const size_t alloc_size =
         (m_offset.span() * MemorySpanSize + MemorySpanMask) &
