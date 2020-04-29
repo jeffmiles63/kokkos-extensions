@@ -70,6 +70,10 @@ struct TestUmpireAllocators {
     }
     // pooled allocator
     //
+    mem_space_host::make_new_allocator<umpire::strategy::DynamicPool>("_pool");
+    mem_space_host pooled_host("HOST_pool");
+    double* ptrII = (double*)pooled_host.allocate(N * sizeof(double));
+    pooled_host.deallocate(ptrII, N * sizeof(double));
 
     // typed allocator
     //

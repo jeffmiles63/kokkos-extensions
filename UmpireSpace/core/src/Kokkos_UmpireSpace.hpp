@@ -82,15 +82,35 @@ void umpire_deallocate(const char* name, void* const arg_alloc_ptr,
 umpire::Allocator get_allocator(const char* name);
 
 template <class MemorySpace>
-inline const char* umpire_space_name(const MemorySpace& default_device) {
-  if (std::is_same<MemorySpace, Kokkos::HostSpace>::value) return "HOST";
-#if defined(KOKKOS_ENABLE_CUDA)
-  if (std::is_same<MemorySpace, Kokkos::CudaSpace>::value) return "DEVICE";
-  if (std::is_same<MemorySpace, Kokkos::CudaUVMSpace>::value) return "UM";
-  if (std::is_same<MemorySpace, Kokkos::CudaHostPinnedSpace>::value)
-    return "PINNED";
-#endif
+inline constexpr
+    typename std::enable_if<std::is_same<MemorySpace, Kokkos::HostSpace>::value,
+                            const char*>::type
+    umpire_space_name(const MemorySpace& default_device) {
+  return "HOST";
 }
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class MemorySpace>
+inline constexpr
+    typename std::enable_if<std::is_same<MemorySpace, Kokkos::CudaSpace>::value,
+                            const char*>::type
+    umpire_space_name(const MemorySpace& default_device) {
+  return "DEVICE";
+}
+template <class MemorySpace>
+inline constexpr typename std::enable_if<
+    std::is_same<MemorySpace, Kokkos::CudaUVMSpace>::value, const char*>::type
+umpire_space_name(const MemorySpace& default_device) {
+  return "UM";
+}
+template <class MemorySpace>
+inline constexpr typename std::enable_if<
+    std::is_same<MemorySpace, Kokkos::CudaHostPinnedSpace>::value,
+    const char*>::type
+umpire_space_name(const MemorySpace& default_device) {
+  return "PINNED";
+}
+#endif
+
 }  // namespace Impl
 
 /// \class UmpireSpace
@@ -144,6 +164,15 @@ class UmpireSpace {
   static constexpr bool is_host_accessible_space() {
     return Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                            upstream_memory_space>::accessible;
+  }
+
+  template <class StrategyType>
+  static inline void make_new_allocator(const char* name_ext) {
+    std::string space_name = Impl::umpire_space_name(upstream_memory_space());
+    std::string new_alloc_name = space_name + name_ext;
+    auto& rm                   = umpire::ResourceManager::getInstance();
+    auto pooled_allocator      = rm.makeAllocator<StrategyType>(
+        new_alloc_name, Impl::get_allocator(space_name.c_str()));
   }
 
  private:
@@ -277,12 +306,11 @@ struct is_umpire_space<
 };
 
 template <class MemorySpace>
-class SharedAllocationRecord<
-    MemorySpace,
-    typename std::enable_if<is_umpire_space<MemorySpace>::value, void>::type>
+class SharedAllocationRecord<Kokkos::UmpireSpace<MemorySpace>, void>
     : public SharedAllocationRecord<void, void> {
  private:
-  friend MemorySpace;
+  using memory_space = Kokkos::UmpireSpace<MemorySpace>;
+  friend memory_space;
 
   using RecordBase = SharedAllocationRecord<void, void>;
 
@@ -299,14 +327,14 @@ class SharedAllocationRecord<
   inline static RecordBase s_root_record;
 #endif
 
-  const MemorySpace m_space;
+  const memory_space m_space;
 
  protected:
   inline ~SharedAllocationRecord() {
 #if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::deallocateData(
-          Kokkos::Profiling::SpaceHandle(MemorySpace::name()),
+          Kokkos::Profiling::SpaceHandle(memory_space::name()),
           RecordBase::m_alloc_ptr->m_label, data(), size());
     }
 #endif
@@ -317,12 +345,12 @@ class SharedAllocationRecord<
   SharedAllocationRecord() = default;
 
   inline SharedAllocationRecord(
-      const MemorySpace& arg_space, const std::string& arg_label,
+      const memory_space& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size,
       const RecordBase::function_type arg_dealloc = &deallocate)
       : SharedAllocationRecord<void, void>(
 #ifdef KOKKOS_DEBUG
-            &SharedAllocationRecord<MemorySpace, void>::s_root_record,
+            &SharedAllocationRecord<memory_space, void>::s_root_record,
 #endif
             Kokkos::Impl::checked_allocation_with_header(arg_space, arg_label,
                                                          arg_alloc_size),
@@ -339,7 +367,7 @@ class SharedAllocationRecord<
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     // is_host_accessible_space implies that header is in host space, so we
     // can access it directly
-    if (MemorySpace::is_host_accessible_space()) {
+    if (memory_space::is_host_accessible_space()) {
       // Fill in the Header information
       RecordBase::m_alloc_ptr->m_record =
           static_cast<SharedAllocationRecord<void, void>*>(this);
@@ -372,7 +400,7 @@ class SharedAllocationRecord<
  public:
   inline std::string get_label() const {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
-    if (MemorySpace::is_host_accessible_space()) {
+    if (memory_space::is_host_accessible_space()) {
       return std::string(RecordBase::head()->m_label);
     } else {
       // we don't know where the umpire pointer lives, so it is best to create a
@@ -390,7 +418,7 @@ class SharedAllocationRecord<
   }
 
   KOKKOS_INLINE_FUNCTION static SharedAllocationRecord* allocate(
-      const MemorySpace& arg_space, const std::string& arg_label,
+      const memory_space& arg_space, const std::string& arg_label,
       const size_t arg_alloc_size) {
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     return new SharedAllocationRecord(arg_space, arg_label, arg_alloc_size);
@@ -400,7 +428,7 @@ class SharedAllocationRecord<
   }
 
   /**\brief  Allocate tracked memory in the space */
-  inline static void* allocate_tracked(const MemorySpace& arg_space,
+  inline static void* allocate_tracked(const memory_space& arg_space,
                                        const std::string& arg_alloc_label,
                                        const size_t arg_alloc_size) {
     if (!arg_alloc_size) return (void*)nullptr;
@@ -420,7 +448,7 @@ class SharedAllocationRecord<
     SharedAllocationRecord* const r_new =
         allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
 
-    Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
+    Kokkos::Impl::DeepCopy<memory_space, memory_space>(
         r_new->data(), r_old->data(), std::min(r_old->size(), r_new->size()));
 
     RecordBase::increment(r_new);
@@ -473,13 +501,13 @@ class SharedAllocationRecord<
   }
 
 #ifdef KOKKOS_DEBUG
-  inline static void print_records(std::ostream&, const MemorySpace& s,
+  inline static void print_records(std::ostream&, const memory_space& s,
                                    bool detail = false) {
     SharedAllocationRecord<void, void>::print_host_accessible_records(
         s, "UmpireSpace", &s_root_record, detail);
   }
 #else
-  inline static void print_records(std::ostream&, const MemorySpace&, bool) {
+  inline static void print_records(std::ostream&, const memory_space&, bool) {
     throw_runtime_exception(
         "SharedAllocationRecord<UmpireSpace>::print_records only works with "
         "KOKKOS_DEBUG enabled");

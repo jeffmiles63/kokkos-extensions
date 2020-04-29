@@ -58,7 +58,7 @@ double shmem_type_g(double* ptr, const int pe) {
   return 0;
 #endif
 }
-#endif //  KOKKOS_ENABLE_SHMEM
+#endif  //  KOKKOS_ENABLE_SHMEM
 
 struct NVSHMEMSpaceSpecializeTag {};
 
