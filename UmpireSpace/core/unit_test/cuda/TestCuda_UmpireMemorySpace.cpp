@@ -47,11 +47,11 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, umpire_space_shared_alloc) {
-  test_shared_alloc<Kokkos::UmpireCudaSpace,
+  test_shared_alloc<Kokkos::UmpireSpace<Kokkos::CudaSpace>,
                     Kokkos::DefaultHostExecutionSpace>();
-  test_shared_alloc<Kokkos::UmpireCudaUVMSpace,
+  test_shared_alloc<Kokkos::UmpireSpace<Kokkos::CudaUVMSpace>,
                     Kokkos::DefaultHostExecutionSpace>();
-  test_shared_alloc<Kokkos::UmpireCudaHostPinnedSpace,
+  test_shared_alloc<Kokkos::UmpireSpace<Kokkos::CudaHostPinnedSpace>,
                     Kokkos::DefaultHostExecutionSpace>();
 }
 

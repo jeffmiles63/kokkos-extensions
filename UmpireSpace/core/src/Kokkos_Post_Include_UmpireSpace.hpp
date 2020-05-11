@@ -41,13 +41,30 @@
 //@HEADER
 */
 
-#include <openmp/TestOpenMP_Category.hpp>
-#include <TestSharedAlloc.hpp>
+#ifndef KOKKOS_UMPIRE_POST_INCLUDE_HPP
+#define KOKKOS_UMPIRE_POST_INCLUDE_HPP
 
-namespace Test {
 
-TEST(TEST_CATEGORY, umpire_space_shared_alloc) {
-  test_shared_alloc<Kokkos::UmpireSpace<Kokkos::HostSpace>, TEST_EXECSPACE>();
-}
+namespace Kokkos {
 
-}  // namespace Test
+namespace Impl {
+
+template <class ExecutionSpace, class InternalMemorySpace>
+struct MemorySpaceAccess<Kokkos::ScratchMemorySpace<ExecutionSpace>, Kokkos::UmpireSpace<InternalMemorySpace> > {
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy = false };
+};
+
+template <class InternalMemorySpace, class ExecutionSpace>
+struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>, Kokkos::ScratchMemorySpace<ExecutionSpace> > {
+  enum { assignable = false };
+  enum { accessible = true };
+  enum { deepcopy = false };
+};
+
+}  // namespace Impl
+
+}  // namespace Kokkos
+
+#endif // KOKKOS_UMPIRE_POST_INCLUDE_HPP
