@@ -166,13 +166,13 @@ class UmpireSpace {
                                            upstream_memory_space>::accessible;
   }
 
-  template <class StrategyType>
-  static inline void make_new_allocator(const char* name_ext) {
+  template <class StrategyType, class ... Args>
+  static inline void make_new_allocator(const char* name_ext, Args...args) {
     std::string space_name = Impl::umpire_space_name(upstream_memory_space());
     std::string new_alloc_name = space_name + name_ext;
     auto& rm                   = umpire::ResourceManager::getInstance();
     auto pooled_allocator      = rm.makeAllocator<StrategyType>(
-        new_alloc_name, Impl::get_allocator(space_name.c_str()));
+        new_alloc_name, Impl::get_allocator(space_name.c_str()), args...);
   }
 
  private:
