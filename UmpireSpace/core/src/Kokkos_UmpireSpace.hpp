@@ -194,17 +194,21 @@ namespace Impl {
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::HostSpace,
                          Kokkos::UmpireSpace<InternalMemorySpace>> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<Kokkos::HostSpace,
+                                         InternalMemorySpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>,
                          Kokkos::HostSpace> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<InternalMemorySpace,
+                                         Kokkos::HostSpace>;
+  enum { assignable =internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 #ifdef KOKKOS_ENABLE_CUDA
@@ -212,49 +216,61 @@ struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>,
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
                          Kokkos::UmpireSpace<InternalMemorySpace>> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
+                                         InternalMemorySpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>,
                          Kokkos::CudaHostPinnedSpace> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<InternalMemorySpace,
+                                         Kokkos::CudaHostPinnedSpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::CudaUVMSpace,
                          Kokkos::UmpireSpace<InternalMemorySpace>> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<Kokkos::CudaUVMSpace,
+                                         InternalMemorySpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>,
                          Kokkos::CudaUVMSpace> {
-  enum { assignable = true };
-  enum { accessible = true };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<InternalMemorySpace,
+                                         Kokkos::CudaUVMSpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::CudaSpace,
                          Kokkos::UmpireSpace<InternalMemorySpace>> {
-  enum { assignable = false };
-  enum { accessible = false };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<Kokkos::CudaSpace,
+                                         InternalMemorySpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 
 template <class InternalMemorySpace>
 struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>,
                          Kokkos::CudaSpace> {
-  enum { assignable = false };
-  enum { accessible = false };
-  enum { deepcopy = true };
+using internal_memory_space_access = MemorySpaceAccess<InternalMemorySpace,
+                                         Kokkos::CudaSpace>;
+  enum { assignable = internal_memory_space_access::assignable };
+  enum { accessible = internal_memory_space_access::accessible };
+  enum { deepcopy = internal_memory_space_access::deepcopy };
 };
 #endif
 

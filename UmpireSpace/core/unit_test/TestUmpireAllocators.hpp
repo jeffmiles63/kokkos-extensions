@@ -74,6 +74,11 @@ struct TestUmpireAllocators {
     mem_space_host pooled_host("HOST_pool");
     double* ptrII = (double*)pooled_host.allocate(N * sizeof(double));
     pooled_host.deallocate(ptrII, N * sizeof(double));
+    
+    mem_space_device::make_new_allocator<umpire::strategy::DynamicPool>("_pool");
+    mem_space_device pooled_dev("DEVICE_pool");
+    double* ptrIII = (double*)pooled_dev.allocate(N * sizeof(double));
+    pooled_dev.deallocate(ptrIII, N * sizeof(double));
 
     // typed allocator
     //
