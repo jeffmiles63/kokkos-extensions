@@ -74,6 +74,18 @@ namespace Kokkos {
 
 namespace Impl {
 
+// Local function to test if Umpire allocator registerd from pointer
+bool test_umpire_from_ptr(const void *ptr, bool offset) {
+  auto &rm = umpire::ResourceManager::getInstance();
+
+  Kokkos::Impl::SharedAllocationHeader *header =
+      (Kokkos::Impl::SharedAllocationHeader *)ptr;
+
+  if (offset) header -= 1;
+
+  return rm.hasAllocator(header);
+}
+
 /* umpire_to_umpire_deep_copy: copy from umpire ptr to umpire ptr
  *                             umpire allocation records for each space
  *                             are used directly (accessed from resource
@@ -251,9 +263,15 @@ void *umpire_allocate(const char *name, const size_t arg_alloc_size) {
   if (arg_alloc_size) {
     // Over-allocate to and round up to guarantee proper alignment.
     size_t size_padded = arg_alloc_size + sizeof(void *) + alignment;
+    try {
+      auto allocator = get_allocator(name);
+      ptr            = allocator.allocate(size_padded);
+    } catch (umpire::util::Exception &e) {
+      std::cout << "Couldn't create Allocator with allocator = " << name
+                << std::endl;
 
-    auto allocator = get_allocator(name);
-    ptr            = allocator.allocate(size_padded);
+      std::cout << e.message() << std::endl;
+    }
   }
 
   if (ptr == nullptr) {

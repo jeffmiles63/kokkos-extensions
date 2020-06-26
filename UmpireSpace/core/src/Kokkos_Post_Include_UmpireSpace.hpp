@@ -44,28 +44,6 @@
 #ifndef KOKKOS_UMPIRE_POST_INCLUDE_HPP
 #define KOKKOS_UMPIRE_POST_INCLUDE_HPP
 
-namespace Kokkos {
-
-namespace Impl {
-
-template <class ExecutionSpace, class InternalMemorySpace>
-struct MemorySpaceAccess<Kokkos::ScratchMemorySpace<ExecutionSpace>,
-                         Kokkos::UmpireSpace<InternalMemorySpace> > {
-  enum { assignable = false };
-  enum { accessible = true };
-  enum { deepcopy = false };
-};
-
-template <class InternalMemorySpace, class ExecutionSpace>
-struct MemorySpaceAccess<Kokkos::UmpireSpace<InternalMemorySpace>,
-                         Kokkos::ScratchMemorySpace<ExecutionSpace> > {
-  enum { assignable = false };
-  enum { accessible = true };
-  enum { deepcopy = false };
-};
-
-}  // namespace Impl
-
-}  // namespace Kokkos
+namespace Kokkos {}  // namespace Kokkos
 
 #endif  // KOKKOS_UMPIRE_POST_INCLUDE_HPP
