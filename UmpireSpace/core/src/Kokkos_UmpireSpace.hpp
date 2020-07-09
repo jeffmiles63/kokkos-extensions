@@ -59,9 +59,7 @@
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <impl/Kokkos_MemorySpace.hpp>
 
-#if defined(KOKKOS_ENABLE_PROFILING)
 #include <impl/Kokkos_Tools.hpp>
-#endif
 
 #include "umpire/ResourceManager.hpp"
 #include "umpire/Allocator.hpp"
@@ -149,13 +147,44 @@ class UmpireSpace {
 
   /**\brief  Allocate untracked memory in the space */
   inline void* allocate(const size_t arg_alloc_size) const {
-    return Impl::umpire_allocate(m_AllocatorName, arg_alloc_size);
+     return allocate("[unlabelled]", arg_alloc_size);
+  }
+
+  /**\brief  Allocate untracked memory in the space */
+  inline void* allocate(const char* arg_label, 
+                        const size_t arg_alloc_size,
+                        const size_t arg_logical_size = 0) const {
+    const size_t reported_size =
+        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    static_assert(sizeof(void *) == sizeof(uintptr_t),
+                "Error sizeof(void*) != sizeof(uintptr_t)");
+   
+    void * ptr = Impl::umpire_allocate(m_AllocatorName, arg_alloc_size);
+    if (ptr != nullptr && Kokkos::Profiling::profileLibraryLoaded()) {
+         Kokkos::Profiling::allocateData(
+             Kokkos::Profiling::make_space_handle(name()), arg_label, ptr,
+             reported_size);
+    }
+    return ptr;
   }
 
   /**\brief  Deallocate untracked memory in the space */
   inline void deallocate(void* const arg_alloc_ptr,
                          const size_t arg_alloc_size) const {
+      return deallocate( "[unlabelled]",  arg_alloc_ptr, arg_alloc_size );
+  }
+
+  inline void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size,
+                  const size_t arg_logical_size = 0) const {
     if (arg_alloc_ptr != nullptr && arg_alloc_size > 0) {
+      size_t reported_size =
+          (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+      if (Kokkos::Profiling::profileLibraryLoaded()) {
+        Kokkos::Profiling::deallocateData(
+            Kokkos::Profiling::make_space_handle(name()), arg_label,
+            arg_alloc_ptr, reported_size);
+      }
       Impl::umpire_deallocate(m_AllocatorName, arg_alloc_ptr, arg_alloc_size);
     }
   }
@@ -326,13 +355,11 @@ class SharedAllocationRecord<Kokkos::UmpireSpace<MemorySpace>, void>
 
  protected:
   inline ~SharedAllocationRecord() {
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::deallocateData(
           Kokkos::Profiling::make_space_handle(memory_space::name()),
           RecordBase::m_alloc_ptr->m_label, data(), size());
     }
-#endif
     m_space.deallocate(SharedAllocationRecord<void, void>::m_alloc_ptr,
                        SharedAllocationRecord<void, void>::m_alloc_size);
   }
@@ -350,13 +377,11 @@ class SharedAllocationRecord<Kokkos::UmpireSpace<MemorySpace>, void>
                                                          arg_alloc_size),
             sizeof(SharedAllocationHeader) + arg_alloc_size, arg_dealloc),
         m_space(arg_space) {
-#if defined(KOKKOS_ENABLE_PROFILING)
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::allocateData(
           Kokkos::Profiling::make_space_handle(arg_space.name()), arg_label,
           data(), arg_alloc_size);
     }
-#endif
 
 #if defined(KOKKOS_ACTIVE_EXECUTION_MEMORY_SPACE_HOST)
     // is_host_accessible_space implies that header is in host space, so we
