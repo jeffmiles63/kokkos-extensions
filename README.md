@@ -43,6 +43,20 @@ If there are additional setup requirements for the execution backend, then the n
 
 If there are additional definitions needed after the spaces are declared, the backend name must be appeded to the `KOKKOS_BACKEND_POST_INCLUDE_LIST` option.  With this addition the file `<plugin root>/core/src/Kokkos_Post_Include_<space name>.hpp` is also required.
 
+An implementation of the following virtual class is required to facilitate proxy calls from `Kokkos::initialize`, `Kokkos::finalize`, `Kokkos::fence` and `Kokkos::print_configuration`.
+
+```c++
+class MySpaceFactory : public ExecSpaceFactoryBase {
+  public:
+    MySpaceFactory();
+    ~MySpaceFactory();
+    virtual void initialize(const InitArguments& args);
+    virtual void finalize(const bool);
+    virtual void fence();
+    virtual void print_configuration(std::ostringstream& msg, const bool detail);
+};
+```
+
 The default execution and memoryspaces logic can only be set with internally loaded spaces; however the defaults can be overridden with several Kokkos options.  
 
  - Kokkos_DEFAULT_DEVICE_EXEC_SPACE - this will override the default device execution space.
