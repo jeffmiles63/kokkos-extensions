@@ -79,6 +79,10 @@ in the destructor the execution space should be unregistered using the same name
 
 `Kokkos::Impl::ExecSpaceManager::get_instance().unregister_space_factory("<three digit number>_<BackendName>");`
 
+The exec space factory must be register before the program executes `main`, thus there must be a global default declaration included within one of the source files.
+
+`MySpaceFactory g_my_space_factory;`
+
 ## Space Defaults
 
 The default execution and memoryspaces logic can only be set with internally loaded spaces; however the defaults can be overridden with several Kokkos options.  
