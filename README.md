@@ -29,8 +29,9 @@ The following files are required for a Kokkos plugin, but the contents may vary.
  - ` <plugin root>/core/unit_test/CMakeLists.txt ` - CMake file used to include source files into kokkos unit tests.  This is usually accomplished by adding the test cpp files to the `<BackendName>_SOURCES` list.  If the plugin contains a new execution space, then the incremental tests should be utilized.
  - ` <plugin root>/core/src/fwd/Kokkos_Fwd_<space name>.hpp ` - header file containing forward declare of plugin space/s.  This is included in Kokkos_Core_fwd.hpp
  - ` <plugin root>/core/src/decl/Kokkos_Declare_<space name>.hpp ` - header file containing full declaration of plugin space/s.  This is included in Kokkos_Core.hpp.  Usually this is a redirect where it includes the actual space header file/s.
-
-
+ - `<plugin root>/core/src/Kokkos_Post_Include_<space name>.hpp` - optional header file containing declarations that follow the general set of spaces, views, etc.
+ - `<plugin root>/core/src/setup/Kokkos_Setup_<space name>.hpp` - optional header file containing backend pre-requisits (included before execution space declarations)
+  
 If the Plugin contains a Memory Space only, the name of the space must be appended to Kokkos option `KOKKOS_MEMSPACE_LIST`.   The name should match the `<space name>` referenced above.  
   
   `LIST(APPEND KOKKOS_MEMSPACE_LIST <space name>)`
@@ -43,19 +44,42 @@ If there are additional setup requirements for the execution backend, then the n
 
 If there are additional definitions needed after the spaces are declared, the backend name must be appeded to the `KOKKOS_BACKEND_POST_INCLUDE_LIST` option.  With this addition the file `<plugin root>/core/src/Kokkos_Post_Include_<space name>.hpp` is also required.
 
+## Initialization and Finalization
+
 An implementation of the following virtual class is required to facilitate proxy calls from `Kokkos::initialize`, `Kokkos::finalize`, `Kokkos::fence` and `Kokkos::print_configuration`.
 
 ```c++
+namespace Kokkos {
+namespace Impl {
 class MySpaceFactory : public ExecSpaceFactoryBase {
   public:
     MySpaceFactory();
-    ~MySpaceFactory();
+    virtual ~MySpaceFactory();
     virtual void initialize(const InitArguments& args);
     virtual void finalize(const bool);
     virtual void fence();
     virtual void print_configuration(std::ostringstream& msg, const bool detail);
 };
+} // namespace Impl
+} // namespace Kokkos
 ```
+
+`initialize` is used to initialize the execution space resources.
+`finalize` is used to finalize / close the execution space resources.
+`fence` is the global (static) fence of the execution space resources.
+`print_configuration` prints the runtime configuration for the execution space.
+
+Within the constructor, the execution space should be registered with the ExecSpaceManager using the following.
+
+`ExecSpaceManager::get_instance().register_space_factory("<three digit number>_<BackendName>", this);`
+
+The name is comprised of a number and a name.  This is so the initialize functions can be called in a "known" order.  Serial uses `100_Serial`, host parallel backends are `< 100` and device (accelerator) backes are `> 100`.
+
+in the destructor the execution space should be unregistered using the same name.
+
+`ExecSpaceManager::get_instance().unregister_space_factory("<three digit number>_<BackendName>");`
+
+## Space Defaults
 
 The default execution and memoryspaces logic can only be set with internally loaded spaces; however the defaults can be overridden with several Kokkos options.  
 
