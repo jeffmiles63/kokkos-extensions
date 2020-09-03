@@ -71,13 +71,13 @@ class MySpaceFactory : public ExecSpaceFactoryBase {
 
 Within the constructor, the execution space should be registered with the ExecSpaceManager using the following.
 
-`ExecSpaceManager::get_instance().register_space_factory("<three digit number>_<BackendName>", this);`
+`Kokkos::Impl::ExecSpaceManager::get_instance().register_space_factory("<three digit number>_<BackendName>", this);`
 
 The name is comprised of a number and a name.  This is so the initialize functions can be called in a "known" order.  Serial uses `100_Serial`, host parallel backends are `< 100` and device (accelerator) backes are `> 100`.
 
 in the destructor the execution space should be unregistered using the same name.
 
-`ExecSpaceManager::get_instance().unregister_space_factory("<three digit number>_<BackendName>");`
+`Kokkos::Impl::ExecSpaceManager::get_instance().unregister_space_factory("<three digit number>_<BackendName>");`
 
 ## Space Defaults
 
