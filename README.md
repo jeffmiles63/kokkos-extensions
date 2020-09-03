@@ -39,7 +39,9 @@ If the Plugin contains an Execution Space, the name of the space must be appende
 
 `LIST(APPEND KOKKOS_ENABLED_DEVICES <space name>)`
 
-If there are additional setup requirements for the execution backend, then the name must be appended to the `DEVICE_SETUP_LIST` option.  With this addition, the file ` <plugin root>/core/src/Kokkos_Setup_<space name>.hpp ` is also required.
+If there are additional setup requirements for the execution backend, then the name must be appended to the `DEVICE_SETUP_LIST` option.  With this addition, the file ` <plugin root>/core/src/setup/Kokkos_Setup_<space name>.hpp ` is also required.
+
+If there are additional definitions needed after the spaces are declared, the backend name must be appeded to the `KOKKOS_BACKEND_POST_INCLUDE_LIST` option.  With this addition the file `<plugin root>/core/src/Kokkos_Post_Include_<space name>.hpp` is also required.
 
 The default execution and memoryspaces logic can only be set with internally loaded spaces; however the defaults can be overridden with several Kokkos options.  
 
